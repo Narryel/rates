@@ -18,7 +18,13 @@ public class RateController {
 
     @GetMapping("/{currency}")
     public String getUsdRateByCurrency(@PathVariable("currency") String currency) {
-        val currencyRate = rateService.getRubleRateToCurrency(currency);
+        val currencyRate = rateService.getCurrencyRateToUsd(currency);
+        return String.format("USD rate to %s is %s", currency.toUpperCase(), currencyRate.toString());
+    }
+
+    @GetMapping("/yesterday/{currency}")
+    public String getYesterdayUsdRateByCurrency(@PathVariable("currency") String currency) {
+        val currencyRate = rateService.getYesterdayCurrencyRateToUsd(currency);
         return String.format("USD rate to %s is %s", currency.toUpperCase(), currencyRate.toString());
     }
 }
