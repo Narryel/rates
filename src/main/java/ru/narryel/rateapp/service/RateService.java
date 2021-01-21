@@ -1,45 +1,44 @@
 package ru.narryel.rateapp.service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import ru.narryel.rateapp.dto.ExchangeRatesApiResponse;
+import ru.narryel.rateapp.base.exception.RatesValidationException;
 
-import java.net.URI;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class RateService {
 
-    public static final String RATES_API_APP_KEY = "35b85788d95c4debbd776948d82e3240";
-
-    private final RestTemplate restTemplate;
+    private final ExternalRatesApiService externalRatesApiService;
+    private final GifSupplierService gifSupplierService;
 
     public Double getCurrencyRateToUsd(String currency) {
-        return requestCurrencyRateAndParseResponse(null, currency);
+        return externalRatesApiService.requestCurrentRateByCurrency(currency);
     }
 
-
-    @SneakyThrows
-    private Double requestCurrencyRateAndParseResponse(LocalDate date, String currency) {
-
-        val uriString = date == null ? String.format("https://openexchangerates.org/api/latest.json?app_id=%s", RATES_API_APP_KEY)
-                : String.format("https://openexchangerates.org/api/historical/%s.json?app_id=%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE), RATES_API_APP_KEY);
-        val response = restTemplate.getForObject(new URI(uriString), ExchangeRatesApiResponse.class);
-        val currencyKey = currency.toUpperCase();
-        assert response != null;
-        val currencyRate = response.getRates().get(currencyKey);
-        if (currencyRate == null) {
-            throw new RuntimeException(String.format("Не пришел курс по валюте с ключом %s", currency));
-        }
-        return currencyRate;
-    }
 
     public Double getYesterdayCurrencyRateToUsd(String currency) {
-        return requestCurrencyRateAndParseResponse(LocalDate.now().minusDays(1), currency);
+        return externalRatesApiService.requestRateByDateAndCurrency(LocalDate.now().minusDays(1), currency);
+    }
+
+    public String getRateDifferenceGif(String date, String currency) {
+        LocalDate parsedDate;
+        try {
+            parsedDate = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (Exception e) {
+            log.error("Не удалось запарсить дату из запроса.", e);
+            throw new RatesValidationException(String.format("Не удалось запарсить дату из запроса. Ошибка:%s ", e.getMessage()));
+        }
+
+        val currentRate = externalRatesApiService.requestCurrentRateByCurrency(currency);
+        val rateByDate = externalRatesApiService.requestRateByDateAndCurrency(parsedDate, currency);
+
+
+        return currentRate >= rateByDate ? gifSupplierService.getRandomHappyGif().getBitlyUrl() : gifSupplierService.getRandomSadGif().getBitlyUrl();
     }
 }

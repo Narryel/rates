@@ -1,0 +1,9 @@
+
+
+api:
+  key:
+    giphy: lg480QRVRZr3BVhnMbgmaZCob1MXp3QI
+    rates: 35b85788d95c4debbd776948d82e3240
+
+server:
+  port: 8090
