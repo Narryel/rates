@@ -26,15 +26,15 @@ public class GifSupplierService {
 
 
     public GifDTO getRandomSadGif() {
-        return requestGifBySeachWord(SAD_SEARCH_KEY);
+        return requestGifBySearchWord(SAD_SEARCH_KEY);
     }
 
     public GifDTO getRandomHappyGif() {
-        return requestGifBySeachWord(HAPPY_SEARCH_KEY);
+        return requestGifBySearchWord(HAPPY_SEARCH_KEY);
     }
 
     @SneakyThrows
-    private GifDTO requestGifBySeachWord(String searchKey) {
+    private GifDTO requestGifBySearchWord(String searchKey) {
 
         val giphyApiResponse = restTemplate.getForObject(
                 new URI(String.format("https://api.giphy.com/v1/gifs/search?api_key=%s&q=%s", apiKeys.getGiphy(), searchKey)),
