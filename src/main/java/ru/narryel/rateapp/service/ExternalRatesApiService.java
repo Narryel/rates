@@ -2,7 +2,9 @@ package ru.narryel.rateapp.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -15,13 +17,17 @@ import java.time.format.DateTimeFormatter;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ExternalRatesApiService {
 
     private final RestTemplate restTemplate;
     private final ApiKeysConfigurationProperties apiKeys;
 
     @SneakyThrows
+    @Cacheable("rates")
     public Double requestRateByDateAndCurrency(@Nullable LocalDate date, String currency) {
+        log.info(String.format("Запрашиваю курс по валюте %s", currency));
+
 
         val uriString = date == null ? String.format("https://openexchangerates.org/api/latest.json?app_id=%s", apiKeys.getRates())
                 : String.format("https://openexchangerates.org/api/historical/%s.json?app_id=%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE), apiKeys.getRates());
